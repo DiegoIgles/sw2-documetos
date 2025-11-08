@@ -32,3 +32,4 @@ ALLOWED_ORIGINS=*
 
 levantar docker 
 docker-compose up -d
+docker compose up --build
