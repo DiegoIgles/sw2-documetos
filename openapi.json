@@ -1,0 +1,113 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Microservicio Documentos - API",
+    "version": "1.0.0",
+    "description": "API para gestión de documentos (uploads, downloads, listado, eliminación). Algunos endpoints requieren Bearer JWT."
+  },
+  "servers": [
+    { "url": "http://localhost:8081" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "DocMeta": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "doc_id": { "type": "string" },
+          "filename": { "type": "string" },
+          "size": { "type": "integer", "format": "int64" },
+          "id_cliente": { "type": "integer" },
+          "id_expediente": { "type": "integer" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": { "description": "ok" }
+        }
+      }
+    },
+    "/admin/documentos": {
+      "get": {
+        "summary": "Listar todos los documentos (público)",
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Lista de metadatos", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/DocMeta" } } } } }
+        }
+      }
+    },
+    "/documentos": {
+      "post": {
+        "summary": "Subir documento (requiere Bearer)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "format": "binary" },
+                  "id_expediente": { "type": "integer" }
+                },
+                "required": ["file", "id_expediente"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Documento subido", "content": { "application/json": { "schema": { "type": "object" } } } }
+        }
+      }
+    },
+    "/mis-documentos": {
+      "get": {
+        "summary": "Listar documentos del cliente autenticado",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Lista", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/DocMeta" } } } } }
+        }
+      }
+    },
+    "/expedientes/{id_expediente}/documentos": {
+      "get": {
+        "summary": "Listar documentos por expediente",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id_expediente", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Lista", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/DocMeta" } } } } }
+        }
+      }
+    },
+    "/documentos/{doc_id}": {
+      "get": {
+        "summary": "Descargar documento (público)",
+        "parameters": [ { "name": "doc_id", "in": "path", "required": true, "schema": { "type": "string" } } ],
+        "responses": { "200": { "description": "Archivo", "content": { "application/pdf": { "schema": { "type": "string", "format": "binary" } } } } }
+      },
+      "delete": {
+        "summary": "Eliminar documento (requiere Bearer)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [ { "name": "doc_id", "in": "path", "required": true, "schema": { "type": "string" } } ],
+        "responses": { "204": { "description": "Eliminado" }, "403": { "description": "No autorizado" } }
+      }
+    }
+  }
+}

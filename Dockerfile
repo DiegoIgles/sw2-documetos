@@ -12,7 +12,7 @@ FROM gcr.io/distroless/base-debian12
 WORKDIR /app
 ENV PORT=8081
 COPY --from=build /bin/server /app/server
-COPY .env /app/.env
+COPY openapi.json /app/openapi.json
 EXPOSE 8081
 USER 65532:65532
 ENTRYPOINT ["/app/server"]

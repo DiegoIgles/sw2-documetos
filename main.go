@@ -383,6 +383,44 @@ func main() {
 	// Health
 	r.GET("/health", func(c *gin.Context) { c.JSON(200, gin.H{"status": "ok"}) })
 
+	// Servir especificación OpenAPI y Swagger UI
+	r.GET("/openapi.json", func(c *gin.Context) {
+		// Servir el archivo estático openapi.json ubicado en la raíz del proyecto
+		c.File("./openapi.json")
+	})
+
+	r.GET("/docs", func(c *gin.Context) {
+		html := `<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Docs - Microservicio Documentos</title>
+		<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4/swagger-ui.css" />
+		<style>body { margin:0; padding:0; }</style>
+	</head>
+	<body>
+		<div id="swagger-ui"></div>
+		<script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"></script>
+		<script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-standalone-preset.js"></script>
+		<script>
+			window.onload = function() {
+				const ui = SwaggerUIBundle({
+					url: '/openapi.json',
+					dom_id: '#swagger-ui',
+					presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+					layout: "BaseLayout",
+					deepLinking: true
+				})
+				window.ui = ui
+			}
+		</script>
+	</body>
+</html>`
+
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+	})
+
 	log.Println("Documentos service escuchando en :" + port)
 	s := &http.Server{
 		Addr:           ":" + port,
